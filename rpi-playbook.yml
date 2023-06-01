@@ -1,0 +1,77 @@
+---
+- name: Setup Raspberry Pi
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Determine OS
+      shell: |
+        if [ -f /etc/os-release ]; then
+          . /etc/os-release
+          echo $ID
+        fi
+      register: os
+
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+      when: os.stdout == "raspbian"
+
+    - name: Update and upgrade pacman packages
+      pacman:
+        update_cache: yes
+        upgrade: yes
+      when: os.stdout == "arch"
+
+    - name: Install sudo
+      package:
+        name: sudo
+        state: present
+
+    - name: Install yay
+      shell: |
+        git clone https://aur.archlinux.org/yay.git
+        cd yay
+        makepkg -si
+      when: os.stdout == "arch"
+
+    - name: Install neovim
+      package:
+        name: neovim
+        state: present
+
+    - name: Clone dotfiles for neovim
+      git:
+        repo: '<your-dotfiles-repo-url>'
+        dest: '~/.config/nvim'
+
+    - name: Install zsh
+      package:
+        name: zsh
+        state: present
+
+    - name: Install oh-my-zsh
+      shell: |
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
+    - name: Clone dotfiles for zsh
+      git:
+        repo: '<your-dotfiles-repo-url>'
+        dest: '~/.zshrc'
+
+    - name: Install mpd
+      package:
+        name: mpd
+        state: present
+
+    - name: Install mpc
+      package:
+        name: mpc
+        state: present
+
+    - name: Install snapcast
+      package:
+        name: snapcast
+        state: present
+...
+
